@@ -25,9 +25,6 @@ AppDataSource.initialize()
     });
 
 const app: Application = express()
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 app.post("/signup", async(req: Request, res:Response): Promise<Response> => {
     const user = await AppDataSource.getRepository(User).create(req.body);
@@ -54,6 +51,7 @@ app.post('/login', async(req: Request, res: Response): Promise<Response> => {
     } else {
         return res.send({ message: "로그인 성공" });
     }
+
 });
 
 const PORT = 3000;
