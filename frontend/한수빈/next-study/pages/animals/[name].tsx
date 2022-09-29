@@ -5,7 +5,7 @@
   */
 
 import type { NextPage } from "next";
-import styles from "../styles/Home.module.css";
+import styles from "../../styles/Animals.module.css";
 import { Animal } from "../../components/Animals";
 import { useRouter } from "next/router";
 

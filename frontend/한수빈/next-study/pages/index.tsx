@@ -16,25 +16,25 @@ import { SRC_HAMSTER } from "../constants/images";
 
 const BtnAnimal = ({ name, src }: { name: string; src: string }) => {
   return (
-    <section className={styles.container}>
-      <div className={styles.btnAnimal}>
-        <Link href={`/Animals/${name}`}>
-          <img src={src} alt={name} className={styles.SanimalImg}></img>
-        </Link>
-        <h2 className="name_animal">{name}</h2>
-      </div>
-    </section>
+    <div className={styles.boxAnimal}>
+      <Link href={`/animals/${name}`}>
+        <img src={src} alt={name} className={styles.imgAnimal}></img>
+      </Link>
+      <h2 className={styles.nameAnimal}>{name}</h2>
+    </div>
   );
 };
 
 const Home: NextPage = () => {
   return (
-    <div className={styles.container}>
-      <h1>모여라 동물의 숲</h1>
-      <BtnAnimal name="cat" src={SRC_CAT}></BtnAnimal>
-      <BtnAnimal name="dog" src={SRC_DOG}></BtnAnimal>
-      <BtnAnimal name="hamster" src={SRC_HAMSTER}></BtnAnimal>
-    </div>
+    <section className={styles.main}>
+      <h1 className={styles.title}>모여라 동물의 숲</h1>
+      <div className={styles.container}>
+        <BtnAnimal name="cat" src={SRC_CAT}></BtnAnimal>
+        <BtnAnimal name="dog" src={SRC_DOG}></BtnAnimal>
+        <BtnAnimal name="hamster" src={SRC_HAMSTER}></BtnAnimal>
+      </div>
+    </section>
   );
 };
 
