@@ -1,5 +1,20 @@
 .container {
-  box-shadow: 2px 2px 2px 1px ghostwhite;
   background-color: white;
   padding: 4rem;
+
+  display: flex;
+  gap: 2rem;
+
+  .link {
+    box-shadow: 1px 1px 1px 1px grey;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.75;
+    }
+
+    &:active {
+      box-shadow: none;
+    }
+  }
 }
