@@ -38,7 +38,7 @@ export const ModalBasic = ({ id, name, src, setModalOpen }: ModalProps) => {
 
   return (
     <div className={styles.container}>
-      <img className="" src={src} alt={name + id}></img>
+      <img className={styles.imgAnimal} src={src} alt={name + id}></img>
     </div>
   );
 };

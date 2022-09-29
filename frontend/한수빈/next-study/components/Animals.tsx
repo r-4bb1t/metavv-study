@@ -8,6 +8,7 @@ import { SRC_DOG } from "../constants/images";
 import { SRC_HAMSTER } from "../constants/images";
 import { useState } from "react";
 import { ModalBasic } from "./ModalBasic";
+import styles from "../styles/Animals.module.css";
 
 export const Animal = ({ id, name }: { id: string; name: string }) => {
   var src = "";
@@ -27,11 +28,11 @@ export const Animal = ({ id, name }: { id: string; name: string }) => {
   };
 
   return (
-    <div className="animal_img_container">
+    <div className={styles.boxAnimal}>
       <img
         src={src}
         alt={name + id}
-        className="animal_img"
+        className={styles.imgAnimal}
         onClick={showModal}
       ></img>
       {modal_open && (

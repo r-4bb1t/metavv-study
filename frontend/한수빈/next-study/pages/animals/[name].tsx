@@ -13,15 +13,17 @@ const Animals: NextPage = () => {
   const router = useRouter();
   const ANIMAL_TYPE = router.query.name;
   return (
-    <div className={styles.container}>
-      <h1 className={styles.h1}>{ANIMAL_TYPE}'s playground</h1>
-      <Animal id="1" name={`${ANIMAL_TYPE}`}></Animal>
-      <Animal id="2" name={`${ANIMAL_TYPE}`}></Animal>
-      <Animal id="3" name={`${ANIMAL_TYPE}`}></Animal>
-      <Animal id="4" name={`${ANIMAL_TYPE}`}></Animal>
-      <Animal id="5" name={`${ANIMAL_TYPE}`}></Animal>
-      <Animal id="6" name={`${ANIMAL_TYPE}`}></Animal>
-    </div>
+    <section className={styles.main}>
+      <h1 className={styles.title}>{ANIMAL_TYPE}'s playground</h1>
+      <div className={styles.container}>
+        <Animal id="1" name={`${ANIMAL_TYPE}`}></Animal>
+        <Animal id="2" name={`${ANIMAL_TYPE}`}></Animal>
+        <Animal id="3" name={`${ANIMAL_TYPE}`}></Animal>
+        <Animal id="4" name={`${ANIMAL_TYPE}`}></Animal>
+        <Animal id="5" name={`${ANIMAL_TYPE}`}></Animal>
+        <Animal id="6" name={`${ANIMAL_TYPE}`}></Animal>
+      </div>
+    </section>
   );
 };
 
