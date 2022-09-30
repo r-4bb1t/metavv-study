@@ -18,6 +18,10 @@ export const ImageList = ({ srcList }: Props) => {
     [setSelectedSrc, setIsModalVisible]
   );
 
+  const closeModal = useCallback(() => {
+    setIsModalVisible(false);
+  }, []);
+
   const images = srcList.map((src) => (
     <Image
       className={styles.item}
@@ -33,11 +37,7 @@ export const ImageList = ({ srcList }: Props) => {
   return (
     <div className={styles["image-list"]}>
       {images}
-      <Modal
-        src={selectedSrc}
-        open={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-      />
+      <Modal src={selectedSrc} open={isModalVisible} onClose={closeModal} />
     </div>
   );
 };
