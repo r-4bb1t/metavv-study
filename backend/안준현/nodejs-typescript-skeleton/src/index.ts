@@ -61,26 +61,27 @@ db.serialize(() => {
 });
 
 app.get('/', async (req: Request, res: Response) => {
-  const query = `SELECT * FROM books`;
-  const query1 = `SELECT * FROM meals`;
+  const query = `SELECT * FROM books UNION SELECT * FROM meals`;
   db.serialize();
   new Promise((resolve, reject) =>
-    db.all(query, (err, rows) => {
+    db.all (query, (err, rows) => {
       if (err) console.log(err);
       return resolve(rows);
     }),
   ).then((rows) =>
     res.status(200).send({
-      books: rows,
-      meals: rows
+      data : rows
     }),
   ); // book, meals 전체 목록 보여주기
 });
 
+
+
 app.get('/books', async (req: Request, res: Response) => {
   const query = `SELECT name FROM books`;
   db.serialize();
-  new Promise((resolve, reject) =>
+  // db.all ((실행할 쿼리 값), (결과 핸들러 err가 있으면 err, rows에 해당하는 결과가 있으녀 rows 반환))
+  new Promise((resolve, reject) => // promise 일때 
     db.all(query, (err, rows) => {
       if (err) console.log(err);
       return resolve(rows);
@@ -108,13 +109,26 @@ app.get('/meals', async (req: Request, res: Response) => {
 }); // /meals 로 접근하면 meal 이름 목록 보여주기
 
 app.post('/', async (req: Request, res: Response): Promise<Response> => {
-  const query = `insert into books(type, name, price) values ('${req.body.name}')`;
+  const query = `insert into books(type, name, price, author) values ('${req.body.name}')`;
   db.serialize();
   db.each(query);
   return res.status(200).send({
     message: `Hello World! ${req.body.name}`,
   });
 });
+
+/*app.post('/new', async (req: Request, res: Response): Promise<Response> => {
+  if (${req.body.name} === 'book') {
+    const query = `insert into books(type, name, price, author) values ('${req.body.name}')`;
+    db.serialize();
+    db.each(query);
+    return res.status(200).send({
+      message: `Hello World! ${req.body.name}`,
+    });
+
+  } 
+  
+});*/
 
 
 const PORT = 3000;
