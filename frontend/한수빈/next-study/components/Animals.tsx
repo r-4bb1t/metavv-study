@@ -28,7 +28,7 @@ export const Animal = ({ id, name }: { id: string; name: string }) => {
   };
 
   return (
-    <div className={styles.boxAnimal}>
+    <div className={styles.container}>
       <img
         src={src}
         alt={name + id}

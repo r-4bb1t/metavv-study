@@ -12,6 +12,7 @@ import { useRouter } from "next/router";
 const Animals: NextPage = () => {
   const router = useRouter();
   const ANIMAL_TYPE = router.query.name;
+
   return (
     <section className={styles.main}>
       <h1 className={styles.title}>{ANIMAL_TYPE}'s playground</h1>
