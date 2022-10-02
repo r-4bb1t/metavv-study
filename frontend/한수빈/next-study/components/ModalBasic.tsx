@@ -37,9 +37,9 @@ export const ModalBasic = ({ id, name, src, setModalOpen }: ModalProps) => {
   });
 
   return (
-    <div className={styles.container}>
-      <div className={styles.backgroundImg} ref={modalRef}>
-        <img className={styles.imgAnimal} src={src} alt={name + id}></img>
+    <div className={styles.containerModal}>
+      <div ref={modalRef} className={styles.boxModal}>
+        <img className={styles.imgModal} src={src} alt={name + id}></img>
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ const BtnAnimal = ({ name, src }: { name: string; src: string }) => {
 const Home: NextPage = () => {
   return (
     <section className={styles.main}>
-      <h1 className={styles.title}>모여라 동물의 숲</h1>
+      <h1 className={styles.title}>Come to The Forest of Animals</h1>
       <div className={styles.container}>
         <BtnAnimal name="cat" src={SRC_CAT}></BtnAnimal>
         <BtnAnimal name="dog" src={SRC_DOG}></BtnAnimal>

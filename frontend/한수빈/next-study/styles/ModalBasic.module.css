@@ -1,19 +1,30 @@
-.container {
+.containerModal {
   position: fixed;
   inset: 0;
   background-color: rgba(76, 76, 76, 0.7);
   z-index: 50;
 }
-
-.backgroundImg {
+.boxModal {
   position: relative;
-  padding: 15px;
-  z-index: 70;
 }
-.imgAnimal {
-  position: absolute;
-  transform: translate(50%);
-  margin: 15px;
-  border-radius: 1rem;
+.imgModal {
   z-index: 99;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+@media screen and (min-width: 400px) and (max-width: 700px) {
+  .imgModal {
+    width: 350px;
+    border-radius: 1rem;
+    margin: 175px 0 0 -175px;
+  }
+}
+@media screen and (min-width: 700px) {
+  .imgModal {
+    width: 600px;
+    border-radius: 1rem;
+    margin: 175px 0 0 -300px;
+  }
 }

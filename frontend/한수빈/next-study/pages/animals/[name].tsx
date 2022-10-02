@@ -14,7 +14,7 @@ const Animals: NextPage = () => {
   const ANIMAL_TYPE = router.query.name;
 
   return (
-    <section className={styles.main}>
+    <section className={styles.animals}>
       <h1 className={styles.title}>{ANIMAL_TYPE}'s playground</h1>
       <div className={styles.container}>
         <Animal id="1" name={`${ANIMAL_TYPE}`}></Animal>
