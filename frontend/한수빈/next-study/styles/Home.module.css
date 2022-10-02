@@ -20,13 +20,16 @@
   padding: 0 2rem;
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .boxAnimal {
   position: relative;
   width: 300px;
   height: 300px;
-  margin: 10px;
+  margin: 20px;
+  padding: 20px;
 }
 
 .imgAnimal {
@@ -38,6 +41,7 @@
 
 .nameAnimal {
   font-size: large;
+  font-style: italic;
 }
 
 @media (max-width: 600px) {
