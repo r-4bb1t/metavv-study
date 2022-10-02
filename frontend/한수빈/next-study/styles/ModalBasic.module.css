@@ -1,21 +1,13 @@
-.container {
-  padding: 0 2rem;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-
-.boxAnimal {
+.backgroundImg {
   position: relative;
-  width: 300px;
-  height: 300px;
-  margin: 10px;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1;
 }
-
 .imgAnimal {
+  position: relative;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
   margin: auto;
+  border-radius: 1rem;
+  z-index: 10;
 }

@@ -1,19 +1,21 @@
-.main {
+.home {
   min-height: 100vh;
+}
+
+.main {
   padding: 4rem 0;
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  text-align: center;
 }
 
 .container {
   padding: 0 2rem;
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: center;
 }
 
 .boxAnimal {
@@ -32,7 +34,6 @@
 
 .nameAnimal {
   font-size: large;
-  text-align: center;
 }
 
 @media (max-width: 600px) {
