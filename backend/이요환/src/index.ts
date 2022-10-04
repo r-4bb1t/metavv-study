@@ -2,142 +2,104 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import sqlite3 from 'sqlite3';
+import { DataSource } from 'typeorm';
+// import { User } from './entities/user';
+import { Book } from './entities/book';
+import { Meal } from './entities/meal';
+import { User } from './entities/user';
+
+export const AppDataSource = new DataSource({
+  type: 'sqlite',
+  database: 'database.sqlite',
+  synchronize: true,
+  logging: false,
+  entities: ['src/entities/*.ts'],
+  migrations: ['src/migrations/**/*.ts'],
+  subscribers: ['src/subscribers/**/*.subscriber.ts'],
+});
 
 const app: Application = express();
 const PORT = 3000;
-const db = new sqlite3.Database('./db/my.db', sqlite3.OPEN_READWRITE, (err) => {
-  if (err) {
-    console.error(err.message);
-  } else {
-    console.log('Connected to the mydb database.');
-  }
-});
 
-const dropQuery = `
-  DROP TABLE IF EXISTS person
-`;
-
-const insertQuery = `
-  CREATE TABLE IF NOT EXISTS person(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(20)
-  )
-`;
-
-const insertBookQuery = `
-  CREATE TABLE IF NOT EXISTS book(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type VARCHAR(20),
-    name VARCHAR(20),
-    price INTEGER,
-    author VARCHAR(20)
-  )
-`;
-
-const insertMealQuery = `
-  CREATE TABLE IF NOT EXISTS meal(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type VARCHAR(20),
-    name VARCHAR(20),
-    price INTEGER,
-    restaurant VARCHAR(20)
-  )
-`;
-
-const dummyDataQuery = `
-  insert into person(name) values ('hi'), ('hello')
-`;
-
-db.serialize(() => {
-  db.each(dropQuery);
-  db.each(insertQuery);
-  db.each(dummyDataQuery);
-  db.each(insertBookQuery);
-  db.each(insertMealQuery);
-});
+AppDataSource.initialize()
+  .then(() => {
+    console.log('Data Source has been initialized!');
+  })
+  .catch((err) => {
+    console.error('Error during Data Source initialization:', err);
+  });
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get('/', async (req: Request, res: Response) => {
-  const query = `SELECT * FROM meal`;
-  const query2 = `SELECT * FROM book`;
-  const arr = [] as any[];
+  const meals = await AppDataSource.getRepository(Meal).find();
+  const books = await AppDataSource.getRepository(Book).find();
+  
+  res.json({
+    meals : meals,
+    books : books,
+  })
+});
 
-  db.serialize();
+app.get('/books',async (req:Request, res:Response) => {
+  const books = await AppDataSource.getRepository(Book).find();
+  res.json(books);
+})
 
-  new Promise((resolve, reject) =>
-    db.all(query, (err, rows) => { 
-      if (err) console.log(err);
-      else {
-        db.all(query2, (err, rows2) => {
-          if (err) console.log(err);
-          console.log({1 : rows});
-          console.log({2 : rows2});
-          arr.push({meals : rows, books : rows2});
-          return resolve(arr); 
-        })
-      }
-    }),
-  ).then(() => {
-    res.status(200).send(arr)
+app.get('/meals',async (req:Request, res:Response) => {
+  const meals = await AppDataSource.getRepository(Meal).find();
+  res.json(meals);
+})
+
+app.post('/signup', async (req : Request, res : Response) => {
+  const user = await AppDataSource.getRepository(User).create(req.body);
+  const results = await AppDataSource.getRepository(User).save(user);
+  return res.send(results);
+})
+
+app.post('/login', async (req : Request, res : Response) => {
+  const user = await AppDataSource.getRepository(User)
+  .createQueryBuilder("user")
+  .where("user.username = :username", {username : req.body.username})
+  .getOne()
+
+  if (!user) return res.send("없는 계정");
+  else if (user.password == req.body.password) return res.send("로그인 성공");
+  else return res.send("로그인 실패");
+})
+
+// app.post('/', async (req: Request, res: Response): Promise<Response> => {
+//   const user = await AppDataSource.getRepository(User).create(req.body);
+//   const results = await AppDataSource.getRepository(User).save(user);
+//   return res.send(results);
+// });
+
+app.post('/new', async (req : Request, res : Response) => {
+  if (req.body.type === 'book') {
+    const book = await AppDataSource.getRepository(Book).create(req.body);
+    const results = await AppDataSource.getRepository(Book).save(book);
+    return res.send(results);
+  } else if (req.body.type === 'meal') {
+    const meal = await AppDataSource.getRepository(Meal).create(req.body);
+    const results = await AppDataSource.getRepository(Meal).save(meal);
+    return res.send(results);  
   }
-  );
-});
+})
 
-app.get('/books', async (req: Request, res: Response) => {
-  const query = `SELECT * FROM book`;
+app.post('/find', async (req: Request, res: Response): Promise<Response> => {
+  const books = await AppDataSource.getRepository(Book)
+    .createQueryBuilder('book') //entity 어노테이션 이름인듯~
+    .where('book.name like :name', { name: `%${req.body.name}%` })
+    .getMany();
 
-  new Promise((resolve, reject) =>
-    db.all(query, (err, rows) => {
-      if (err) console.log(err);
-      return resolve(rows);
-    }),
-  ).then((rows) =>
-    res.status(200).send({
-      user: rows,
-    }),
-  );
-});
+  const meals = await AppDataSource.getRepository(Meal)
+    .createQueryBuilder('meal')
+    .where('meal.name like :name', { name: `%${req.body.name}%` })
+    .getMany();
 
-app.get('/meals', async (req: Request, res: Response) => {
-  const query = `SELECT * FROM meal`;
-
-  new Promise((resolve, reject) =>
-    db.all(query, (err, rows) => {
-      if (err) console.log(err);
-      return resolve(rows);
-    }),
-  ).then((rows) =>
-    res.status(200).send({
-      user: rows,
-    }),
-  );
-});
-
-app.post('/', async (req: Request, res: Response): Promise<Response> => {
-  const query = `insert into person(name) values ('${req.body.name}')`;
-  db.serialize();
-  db.each(query);
-  return res.status(200).send({
-    message: `입력 완료: ${req.body.name}`,
-  });
-});
-
-app.post('/new', async (req: Request, res: Response): Promise<Response> => {
-  const queryMeal = `insert into meal(type, name, price, restaurant) values ('${req.body.type}', '${req.body.name}', '${req.body.price}', '${req.body.restaurant}')`;
-  const queryBook = `insert into book(type, name, price, author) values ('${req.body.type}', '${req.body.name}', '${req.body.price}', '${req.body.author}')`;
-
-  if (req.body.type == "meal") {
-    db.each(queryMeal);
-  } else if (req.body.type == "book"){
-    db.each(queryBook);
-  }
-
-  return res.status(200).send({
-    message: `입력 완료: ${req.body.type}`,
-  });
+  return res.send({ books, meals });
 });
 
 try {
@@ -161,3 +123,4 @@ try {
 //   "price" : 30000,
 //   "author" : "이요환"
 // }
+
