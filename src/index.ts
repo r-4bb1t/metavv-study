@@ -138,20 +138,21 @@ app.use(bodyParser.json());
   });
 
 app.post('/new', async (req: Request, res: Response): Promise<Response> => {
-  let addByType;
-  if (req.body.type === 'book') {
-    addByType = `insert into books(type, name, price, author) values ('${req.body.type}','${req.body.name}', ${req.body.price}, '${req.body.author}')`;
-  } else if (req.body.type === 'meal') {
-    addByType = `insert into meals(type, name, price, restaurant) values ('${req.body.type}','${req.body.name}', ${req.body.price}, '${req.body.restaurant}')`;
+  const addBook = `insert into books(type, name, price, author) values ('${req.body.type}', '${req.body.name}', '${req.body.price}', '${req.body.author}')`;
+  const addMeal = `insert into meals(type, name, price, restaurant) values ('${req.body.type}', '${req.body.name}', '${req.body.price}', '${req.body.restaurant}')`;
+
+  if (req.body.type == "book") {
+    db.each(addBook);
+  } else if (req.body.type == "meal"){
+    db.each(addMeal);
   } else {
-    addByType = `Please insert a correct value at ${req.body.type}`;
+    res.send({message: "제대로 된  type 을 넣으세요"})
   }
-  db.serialize();
-  db.each(addByType);
   return res.status(200).send({
-    message: `${req.body.type} 추가 완료`,
+    message: `추가 완료: ${req.body.type}`,
   });
 });
+
 
 // app.get('/', async (req: Request, res: Response) => {
 //   const books = await AppDataSource.getRepository(Book).find();
