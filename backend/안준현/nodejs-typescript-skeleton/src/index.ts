@@ -1,142 +1,67 @@
-import express, { Application, Request, Response } from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import sqlite3, { LIMIT_COLUMN } from 'sqlite3';
+import 'reflect-metadata';
+import express, {Application, Request, Response} from 'express';
+import cors from "cors";
+import bodyParser from "body-parser";
+import sqlite3 from 'sqlite3';
+import { DataSource } from 'typeorm';
+import { User } from './entities/user';
 
-const app: Application = express();
+export const AppDataSource = new DataSource({
+    type: 'sqlite',
+    database: 'database.sqlite',
+    synchronize: true,
+    logging: false,
+    entities: ['src/entities/*.ts'],
+    migrations: ['src/migrations/**/*.ts'],
+    subscribers: ['src/subscribers/**/*.subscriber.ts'],
+});
+
+AppDataSource.initialize()
+    .then(() => {
+        console.log('Data Source has been initialized!');
+    })
+    .catch((err) => {
+        console.error('Error during Data Source initialization:', err);
+    });
+
+const app: Application = express()
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const db = new sqlite3.Database('./db/my.db', sqlite3.OPEN_READWRITE, (err) => {
-  if (err) {
-    console.error(err.message);
-  } else {
-    console.log('Connected to the mydb database.');
-  }
+app.post("/signup", async(req: Request, res:Response): Promise<Response> => {
+    const user = await AppDataSource.getRepository(User).create(req.body);
+    const results = await AppDataSource.getRepository(User).save(user);
+    return res.send(results);
 });
 
-const dropQuery = `
-  DROP TABLE IF EXISTS books
-`;
-const dropQuery1 = `
-  DROP TABLE IF EXISTS meals
-`;
+app.post('/login', async(req: Request, res: Response): Promise<Response> => {
+    const users = await AppDataSource.getRepository(User)
+        .createQueryBuilder('user')
+        .where('user.username like :username', { username: `%${req.body.username}%` })
+        .getMany();
 
-const insertQuery = `
-  CREATE TABLE IF NOT EXISTS books(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type VARCHAR(20),
-    name VARCHAR(20),
-    price INTEGER,
-    author VARCHAR(20)
-  )
-`;
+    const results = await AppDataSource.getRepository(User)
+        .createQueryBuilder('result')
+        .where('result.username like :username', { username: `%${req.body.username}%`})
+        .andWhere('result.password like :password', { password: `%${req.body.password}%`})
+        .getMany();
 
-const insertQuery1 = `
-  CREATE TABLE IF NOT EXISTS meals(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type VARCHAR(20),
-    name VARCHAR(20),
-    price INTEGER,
-    restaurant VARCHAR(20)
-  )
-`;
-
-const dummyDataQuery = `
-  insert into books(type, name, price, author) values ('book', 'nolboo', 10000, 'junhyun'), ('book', 'heungboo', 15000, 'lalala')
-`;
-
-const dummyDataQuery1 = `
-  insert into meals(type, name, price, restaurant) values ('meal', 'eggfried', 1000, 'urijip'), ('meal', 'hamburger', 40000, 'kingdonald')
-`;
-
-db.serialize(() => {
-  db.each(dropQuery);
-  db.each(dropQuery1);
-  db.each(insertQuery);
-  db.each(insertQuery1);
-  db.each(dummyDataQuery);
-  db.each(dummyDataQuery1);
+    if (users.length == 0) {
+        return res.send({ message: "없는 계정" });
+    } else if (results.length == 0) {
+        return res.send({ message: "비밀번호 틀림" });
+    } else {
+        return res.send({ message: "로그인 성공" });
+    }
 });
-
-app.get('/', async (req: Request, res: Response) => {
-  const query = `SELECT * FROM books UNION SELECT * FROM meals`;
-  db.serialize();
-  new Promise((resolve, reject) =>
-    db.all (query, (err, rows) => {
-      if (err) console.log(err);
-      return resolve(rows);
-    }),
-  ).then((rows) =>
-    res.status(200).send({
-      data : rows
-    }),
-  ); // book, meals 전체 목록 보여주기
-});
-
-
-
-app.get('/books', async (req: Request, res: Response) => {
-  const query = `SELECT name FROM books`;
-  db.serialize();
-  // db.all ((실행할 쿼리 값), (결과 핸들러 err가 있으면 err, rows에 해당하는 결과가 있으녀 rows 반환))
-  new Promise((resolve, reject) => // promise 일때 
-    db.all(query, (err, rows) => {
-      if (err) console.log(err);
-      return resolve(rows);
-    }),
-  ).then((rows) =>
-    res.status(200).send({
-      books : rows,
-    }),
-  );
-}); // /books 로 접근하면 book 이름 목록 보여주기
-
-app.get('/meals', async (req: Request, res: Response) => {
-  const query = `SELECT name FROM meals`;
-  db.serialize();
-  new Promise((resolve, reject) =>
-    db.all(query, (err, rows) => {
-      if (err) console.log(err);
-      return resolve(rows);
-    }),
-  ).then((rows) =>
-    res.status(200).send({
-      meals : rows,
-    }),
-  );
-}); // /meals 로 접근하면 meal 이름 목록 보여주기
-
-app.post('/', async (req: Request, res: Response): Promise<Response> => {
-  const query = `insert into books(type, name, price, author) values ('${req.body.name}')`;
-  db.serialize();
-  db.each(query);
-  return res.status(200).send({
-    message: `Hello World! ${req.body.name}`,
-  });
-});
-
-/*app.post('/new', async (req: Request, res: Response): Promise<Response> => {
-  if (${req.body.name} === 'book') {
-    const query = `insert into books(type, name, price, author) values ('${req.body.name}')`;
-    db.serialize();
-    db.each(query);
-    return res.status(200).send({
-      message: `Hello World! ${req.body.name}`,
-    });
-
-  } 
-  
-});*/
-
 
 const PORT = 3000;
 
 try {
-  app.listen(PORT, (): void => {
-    console.log(`Connected successfully on port ${PORT}`);
-  });
+    app.listen(PORT, (): void => {
+        console.log(`Connected successfully on port ${PORT}`);
+    });
 } catch (error: any) {
-  console.error(`Error occured: ${error.message}`);
+    console.error(`Error occured: ${error.message}`);
 }
