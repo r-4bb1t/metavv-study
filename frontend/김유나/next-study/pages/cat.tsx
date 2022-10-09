@@ -34,21 +34,5 @@ const Image: NextPage = () => {
 
 }
 
-// interface Props {
-//     closeModal: Function
-//     image: string
-// }
-  
-// const Modal = ({closeModal, image}:Props) => {
-//     const func = () => {
-//         closeModal();
-//     }
-//     return(
-//         <div onClick={func} className={styles.background}>
-//             {/* <img src='/images/cat1.jpg'/> */}
-//             <img src={image}/>
-//         </div>
-//     )
-// }
 
 export default Image
