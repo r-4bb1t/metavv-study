@@ -2,105 +2,99 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import sqlite3 from 'sqlite3';
+import { DataSource } from 'typeorm';
+import { Book } from './entities/book';
+import { Meal } from './entities/meal';
+import { User } from './entities/user';
+
+export const AppDataSource = new DataSource({
+  type: 'sqlite',
+  database: 'database.sqlite',
+  synchronize: true,
+  logging: false,
+  entities: ['src/entities/*.ts'],
+  migrations: ['src/migrations/**/*.ts'],
+  subscribers: ['src/subscribers/**/*.subscriber.ts'],
+});
 
 const app: Application = express();
+const PORT = 3000;
+
+AppDataSource.initialize()
+  .then(() => {
+    console.log('Data Source has been initialized!');
+  })
+  .catch((err) => {
+    console.error('Error during Data Source initialization:', err);
+  });
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const db = new sqlite3.Database('./db/my.db', sqlite3.OPEN_READWRITE, (err) => {
-  if (err) console.error(err.message);
-  else console.log('Connected to the mydb database');
-});
-
-const dropBook = `DROP TABLE IF EXISTS book`;
-const dropMeal = `DROP TABLE IF EXISTS meal`;
-
-const createBook = `CREATE TABLE IF NOT EXISTS book(
-  id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(20), price integer, author varchar(20)
-  )`;
-const createMeal = `CREATE TABLE IF NOT EXISTS meal(
-  id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(20), price integer, restaurant varchar(20)
-  )`;
-
-const dummyBook = `insert into book(name, price, author) values ('bookex', 3000, 'authorex')`;
-const dummyMeal = `insert into meal(name, price, restaurant) values('mealex', 4500, 'restaurantex')`;
-
-// query execution in db
-db.serialize(() => {
-  //db.serialize guarantees synchronization
-  db.each(dropBook);
-  db.each(dropMeal);
-  db.each(createBook);
-  db.each(createMeal);
-  db.each(dummyBook);
-  db.each(dummyMeal);
-  // db.each(dummyDataQuery);
-});
-
 app.get('/', async (req: Request, res: Response) => {
-  const selectBook = `select * from book`;
-  const selectMeal = `select * from meal`;
-  // db.serialize();
-  new Promise((resolve, reject) =>
-    db.all(selectBook, (err, rows1) => {
-      if (err) console.log(err);
-      else {
-        db.all(selectMeal, (err, rows2) => {
-          if (err) console.log(err);
-          return resolve({ book: rows1, meal: rows2 });
-        });
-      }
-    }),
-  ).then((info) => res.status(200).send(info));
+  const meals = await AppDataSource.getRepository(Meal).find();
+  const books = await AppDataSource.getRepository(Book).find();
+  
+  res.json({
+    meals : meals,
+    books : books,
+  })
 });
 
-app.get('/books', async (req: Request, res: Response) => {
-  const query = `select * from book`;
-  new Promise((resolve, reject) => {
-    db.all(query, (err, rows) => {
-      if (err) console.log(err);
-      return resolve(rows);
-    });
-  }).then((rows) => {
-    res.status(200).send({
-      book: rows,
-    });
-  });
-});
+app.get('/books',async (req:Request, res:Response) => {
+  const books = await AppDataSource.getRepository(Book).find();
+  res.json(books);
+})
 
-app.get('/meals', async (req: Request, res: Response) => {
-  const query = `select * from meal`;
-  new Promise((resolve, reject) => {
-    db.all(query, (err, rows) => {
-      if (err) console.log(err);
-      return resolve(rows);
-    });
-  }).then((rows) => {
-    res.status(200).send({
-      book: rows,
-    });
-  });
-});
+app.get('/meals',async (req:Request, res:Response) => {
+  const meals = await AppDataSource.getRepository(Meal).find();
+  res.json(meals);
+})
 
-app.post('/', async (req: Request, res: Response): Promise<Response> => {
-  let query;
+app.post('/signup', async (req : Request, res : Response) => {
+  const user = await AppDataSource.getRepository(User).create(req.body);
+  const results = await AppDataSource.getRepository(User).save(user);
+  return res.send(results);
+})
+
+app.post('/login', async (req : Request, res : Response) => {
+  const user = await AppDataSource.getRepository(User)
+  .createQueryBuilder("user")
+  .where("user.username = :username", {username : req.body.username})
+  .getOne()
+
+  if (!user) return res.send("없는 계정");
+  else if (user.password == req.body.password) return res.send("로그인 성공");
+  else return res.send("로그인 실패");
+})
+
+
+app.post('/new', async (req : Request, res : Response) => {
   if (req.body.type === 'book') {
-    query = `insert into book(name, price, author) values ('${req.body.name}', ${req.body.price}, '${req.body.author}')`;
+    const book = await AppDataSource.getRepository(Book).create(req.body);
+    const results = await AppDataSource.getRepository(Book).save(book);
+    return res.send(results);
   } else if (req.body.type === 'meal') {
-    query = `insert into meal(name, price, restaurant) values ('${req.body.name}', ${req.body.price}, '${req.body.restaurant}')`;
-  } else {
-    query = '';
+    const meal = await AppDataSource.getRepository(Meal).create(req.body);
+    const results = await AppDataSource.getRepository(Meal).save(meal);
+    return res.send(results);  
   }
-  db.serialize();
-  db.each(query);
-  return res.status(200).send({
-    message: `${req.body.type} is added`,
-  });
-});
+})
 
-const PORT = 3000;
+app.post('/find', async (req: Request, res: Response): Promise<Response> => {
+  const books = await AppDataSource.getRepository(Book)
+    .createQueryBuilder('book')
+    .where('book.name like :name', { name: `%${req.body.name}%` })
+    .getMany();
+
+  const meals = await AppDataSource.getRepository(Meal)
+    .createQueryBuilder('meal')
+    .where('meal.name like :name', { name: `%${req.body.name}%` })
+    .getMany();
+
+  return res.send({ books, meals });
+});
 
 try {
   app.listen(PORT, (): void => {
